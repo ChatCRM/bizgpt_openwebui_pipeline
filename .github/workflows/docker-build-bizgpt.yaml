@@ -1,0 +1,15 @@
+name: Create and publish Docker images with specific build args
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - bizgpt
+
+jobs:
+  build-main-image:
+    uses: ./.github/workflows/build-docker-image.yaml
+    with:
+      image_name: ${{ github.repository }}
+      cache_id: bizgpt
+      image_tag: bizgpt
