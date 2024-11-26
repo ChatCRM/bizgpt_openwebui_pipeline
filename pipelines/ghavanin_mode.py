@@ -14,21 +14,33 @@ from typing import List, Union, Generator, Iterator, Optional
 from schemas import OpenAIChatMessage
 
 from pydantic import BaseModel
+from supabase import create_client, Client
 
 class Pipeline:
     class Valves(BaseModel):
         VAKILGPT_API_URL: str
         API_SECRET_KEY: str
+        SUPABASE_URL: str
+        SUPABASE_KEY: str
+
     def __init__(self):
         self.chat_id = None
         self.valves = self.Valves(
             **{
                 "VAKILGPT_API_URL": os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/submit-stream-v2"),
                 "API_SECRET_KEY": os.getenv("API_SECRET_KEY", ""),
+                "SUPABASE_URL": os.getenv("SUPABASE_URL", ""),
+                "SUPABASE_KEY": os.getenv("SUPABASE_KEY", ""),
             }
         )
         pass
 
+    async def on_valves_updated(self):
+        # This function is called when the valves are updated.
+        self.valves.VAKILGPT_API_URL = os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/submit-stream-v2")
+        self.valves.SUPABASE_URL = os.getenv("SUPABASE_URL", ""),
+        self.valves.SUPABASE_KEY = os.getenv("SUPABASE_KEY", ""),
+    
     async def on_startup(self):
         pass
 
@@ -105,27 +117,38 @@ class Pipeline:
         
         headers = {'Content-Type': 'application/json', 'Authorization':f'Bearer {self.valves.API_SECRET_KEY}'}
         url = self.valves.VAKILGPT_API_URL
-        data = {
-          "username": body['user']['email'],
-          "question_text": user_message,
-          "streamlit_element_key_id": None,
-          "chat_id": self.chat_id,
-          "user_id": body['user']['id']
-        }
-        try:
-            # Initiating a POST request with streaming enabled
-            response = requests.post(url, json=data, headers=headers, stream=True)
-            # response.raise_for_status()  # Raise an exception for HTTP errors
-            return self.stream_sse_response(response)
-            # full_response = ''
-            # for line in response.iter_lines():
-            #     if line:
-            #         full_response += line.decode('utf-8') + '\n'
+        supabase_url = self.valves.SUPABASE_URL
+        supabase_key = self.valves.SUPABASE_KEY
 
-            # # Parse the response to get just the final text
-            # final_text = self.parse_sse_response(full_response)
-            # return final_text
+        supabase: Client = create_client(supabase_url, supabase_key)
 
-        except requests.exceptions.RequestException as e:
-            print(f"An error occurred: {e}")
-            return "Error..."
+        response = supabase.rpc("get_subscription_status").execute( body['user']['email'])
+
+        print(response['data'])
+
+        return self.stream_sse_response('شما دارای اشتراک فعال نیستید. لطفا از سایت وکیلیار اشتراک تهیه نمایید.')
+
+        # data = {
+        #   "username": body['user']['email'],
+        #   "question_text": user_message,
+        #   "streamlit_element_key_id": None,
+        #   "chat_id": self.chat_id,
+        #   "user_id": body['user']['id']
+        # }
+        # try:
+        #     # Initiating a POST request with streaming enabled
+        #     response = requests.post(url, json=data, headers=headers, stream=True)
+        #     # response.raise_for_status()  # Raise an exception for HTTP errors
+        #     return self.stream_sse_response(response)
+        #     # full_response = ''
+        #     # for line in response.iter_lines():
+        #     #     if line:
+        #     #         full_response += line.decode('utf-8') + '\n'
+
+        #     # # Parse the response to get just the final text
+        #     # final_text = self.parse_sse_response(full_response)
+        #     # return final_text
+
+        # except requests.exceptions.RequestException as e:
+        #     print(f"An error occurred: {e}")
+        #     return "Error..."
