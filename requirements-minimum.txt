@@ -14,4 +14,4 @@ aiohttp==3.9.5
 httpx
 
 # Supabase
-supabase==2.10.0 
+supabase
