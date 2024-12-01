@@ -37,9 +37,10 @@ class Pipeline:
 
     async def on_valves_updated(self):
         # This function is called when the valves are updated.
-        self.valves.VAKILGPT_API_URL = os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/submit-stream-v2")
-        self.valves.SUPABASE_URL = os.getenv("SUPABASE_URL", ""),
-        self.valves.SUPABASE_KEY = os.getenv("SUPABASE_KEY", ""),
+        # self.valves.VAKILGPT_API_URL = os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/submit-stream-v2")
+        # self.valves.SUPABASE_URL = os.getenv("SUPABASE_URL", ""),
+        # self.valves.SUPABASE_KEY = os.getenv("SUPABASE_KEY", ""),
+        pass
     
     async def on_startup(self):
         pass
@@ -120,35 +121,101 @@ class Pipeline:
         supabase_url = self.valves.SUPABASE_URL
         supabase_key = self.valves.SUPABASE_KEY
 
-        supabase: Client = create_client(supabase_url, supabase_key)
+        
+        try:
+            supabase: Client = create_client(supabase_url, supabase_key)
 
-        response = supabase.rpc("get_subscription_status").execute( body['user']['email'])
+            response = supabase.rpc("get_subscription_status",params={'email_param':body['user']['email']}).execute( )
+            print("Response is:")
+            print(response.data)
+            if bool(response.data) and any([ item['user_limit'] <= 1  for item in list(response.data)]):
+                data = {
+                "username": body['user']['email'],
+                "question_text": user_message,
+                "streamlit_element_key_id": None,
+                "chat_id": self.chat_id,
+                "user_id": body['user']['id']
+                }
+                response = requests.post(url, json=data, headers=headers, stream=True)
+                # response.raise_for_status()  # Raise an exception for HTTP errors
+                return self.stream_sse_response(response)
+            else:
+                return """
+                    ***شما دارای اشتراک فعال نیستید. لطفا از سایت وکیلیار اشتراک تهیه نمایید.***
+                    [وکیلیار](https://vakilyar.app)
 
-        print(response['data'])
+                """
 
-        return self.stream_sse_response('شما دارای اشتراک فعال نیستید. لطفا از سایت وکیلیار اشتراک تهیه نمایید.')
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred: {e}")
+            return "خطایی در سیستم رخ داده است ."
 
-        # data = {
-        #   "username": body['user']['email'],
-        #   "question_text": user_message,
-        #   "streamlit_element_key_id": None,
-        #   "chat_id": self.chat_id,
-        #   "user_id": body['user']['id']
-        # }
-        # try:
-        #     # Initiating a POST request with streaming enabled
-        #     response = requests.post(url, json=data, headers=headers, stream=True)
-        #     # response.raise_for_status()  # Raise an exception for HTTP errors
-        #     return self.stream_sse_response(response)
-        #     # full_response = ''
-        #     # for line in response.iter_lines():
-        #     #     if line:
-        #     #         full_response += line.decode('utf-8') + '\n'
 
-        #     # # Parse the response to get just the final text
-        #     # final_text = self.parse_sse_response(full_response)
-        #     # return final_text
 
-        # except requests.exceptions.RequestException as e:
-        #     print(f"An error occurred: {e}")
-        #     return "Error..."
+# CREATE OR REPLACE FUNCTION get_subscription_status(email_param TEXT)
+# RETURNS TABLE (
+#     status subscription_status,
+#     allowed_usage bigint,
+#     email TEXT,
+#     user_limit FLOAT
+# ) AS $$
+# BEGIN
+#     RETURN QUERY
+#     SELECT 
+#         s.status, 
+#         p.allowed_usage, 
+#         u.email, 
+#         SUM(cr.id)::FLOAT / p.allowed_usage AS user_limit
+#     FROM 
+#         users u
+#     JOIN 
+#         subscriptions s ON u.id = s.user_id
+#     JOIN 
+#         products p ON p.id = s.product_id
+#     JOIN 
+#         user_credits_log cr ON cr.user_id = u.id
+#     WHERE 
+#         u.email = email_param
+#         AND s.status = 'active'
+#         AND cr.updated_at >= s.current_period_start
+#         AND cr.updated_at < s.current_period_end
+#     GROUP BY 
+#         s.status, p.allowed_usage, u.email;
+# END;
+# $$ LANGUAGE plpgsql;
+
+
+
+
+# CREATE OR REPLACE FUNCTION update_user_credits_log(
+# email_param TEXT,
+# cost_param float,
+# chat_id_param TEXT,
+# question_text_param TEXT,
+# response_text_param TEXT
+# )
+# RETURNS VOID AS $$
+# DECLARE
+#     user_id_param UUID;
+# BEGIN
+#     -- Map email to user_id
+#     SELECT id INTO user_id_param
+#     FROM users
+#     WHERE email = email_param;
+
+#     -- Check if user_id is found
+#     IF user_id_param IS NULL THEN
+#         RAISE EXCEPTION 'User with email % not found.', email_param;
+#     END IF;
+
+#     -- Insert the record into user_credit_logs
+#     INSERT INTO user_credits_log (cost, user_id, chat_id, question_text, response_text)
+#     VALUES (
+#         cost_param,
+#         user_id_param,
+#         chat_id_param,
+#         question_text_param,
+#         response_text_param
+#     );
+# END;
+# $$ LANGUAGE plpgsql;
