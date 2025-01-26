@@ -115,6 +115,9 @@ class Pipeline:
         print(body)
         print("Chat ID is: ")
         print(self.chat_id)
+
+        print("All messages are: ")
+        print(messages)
         
         headers = {'Content-Type': 'application/json', 'Authorization':f'Bearer {self.valves.API_SECRET_KEY}'}
         url = self.valves.VAKILGPT_API_URL
@@ -134,7 +137,8 @@ class Pipeline:
                 "question_text": user_message,
                 "streamlit_element_key_id": None,
                 "chat_id": self.chat_id,
-                "user_id": body['user']['id']
+                "user_id": body['user']['id'],
+                "messages": [ message for message in messages[-5:] if 'اشتراک فعال نیستید' not in message['content'] ]
                 }
                 response = requests.post(url, json=data, headers=headers, stream=True)
                 # response.raise_for_status()  # Raise an exception for HTTP errors
@@ -165,7 +169,7 @@ class Pipeline:
 #         s.status, 
 #         p.allowed_usage, 
 #         u.email, 
-#         SUM(cr.id)::FLOAT / p.allowed_usage AS user_limit
+#         COUNT(cr.id)::FLOAT / p.allowed_usage AS user_limit
 #     FROM 
 #         users u
 #     JOIN 

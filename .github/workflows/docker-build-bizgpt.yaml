@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - bizgpt
+      - vakilgpt
 jobs:
   publish-pipeline-docker-image:
     runs-on: ubuntu-latest
@@ -27,5 +28,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/chatcrm/bizgpt-openwebui-pipeline:bizgpt
-            ghcr.io/chatcrm/bizgpt-openwebui-pipeline:bizgpt-${{ github.sha }}
+            ghcr.io/chatcrm/bizgpt-openwebui-pipeline:${{ github.ref_name }}
+            ghcr.io/chatcrm/bizgpt-openwebui-pipeline:${{ github.ref_name }}-${{ github.sha }}
