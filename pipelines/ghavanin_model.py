@@ -22,6 +22,7 @@ class Pipeline:
         API_SECRET_KEY: str
         SUPABASE_URL: str
         SUPABASE_KEY: str
+        VAKILGPT_TEST: str = "false"
 
     def __init__(self):
         self.chat_id = None
@@ -31,6 +32,7 @@ class Pipeline:
                 "API_SECRET_KEY": os.getenv("API_SECRET_KEY", ""),
                 "SUPABASE_URL": os.getenv("SUPABASE_URL", ""),
                 "SUPABASE_KEY": os.getenv("SUPABASE_KEY", ""),
+                "VAKILGPT_TEST": os.getenv("VAKILGPT_TEST", "false"),
             }
         )
         pass
@@ -123,6 +125,7 @@ class Pipeline:
         url = self.valves.VAKILGPT_API_URL
         supabase_url = self.valves.SUPABASE_URL
         supabase_key = self.valves.SUPABASE_KEY
+        is_vakilgpt = self.valves.VAKILGPT_TEST
 
         
         try:
@@ -131,7 +134,7 @@ class Pipeline:
             response = supabase.rpc("get_subscription_status",params={'email_param':body['user']['email']}).execute( )
             print("Response is:")
             print(response.data)
-            if bool(response.data) and any([ item['user_limit'] <= 1  for item in list(response.data)]):
+            if (bool(response.data) and any([ item['user_limit'] <= 1  for item in list(response.data)])) or is_vakilgpt == "true":
                 data = {
                 "username": body['user']['email'],
                 "question_text": user_message,
