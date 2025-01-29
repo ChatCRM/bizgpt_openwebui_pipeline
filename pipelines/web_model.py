@@ -127,9 +127,20 @@ class Pipeline:
 
         
         try:
+            ALLOWED_SEARCH_WEBSITES = [
+                "davoudabadi.ir","rc.majlis.ir", "ekhtebar.ir",
+                "rrk.ir", "sahoka.azpar.com", "jolt.ut.ac.ir", "vindad.com", 
+                "noorlaw.ir", "jplr.atu.ac.ir", "sid.ir", "lri.ir", "bonyadvokala.com", "ensani.ir",
+                "dadgaran.com", "jlj.ir", "majdlaw.ir", "majdlaw.ir", "qgl.lri.ir", "clr.modares.ac.ir",
+                "sabtjournal.ir", "jhvmn.ir", "lawresearchmagazine.sbu.ac.ir", "sanad.iau.ir", "jclc.sdil.ac.ir",
+                "ijmedicallaw.ir", "jplsq.ut.ac.ir", "cld.razavi.ac.ir", "cilamag.ir", "noormags.ir",
+            ]
             client = TavilyClient(api_key=tavily_secret_key)
             response = client.search(
-                query=user_message, search_depth="advanced", include_answer=True
+                query=user_message, 
+                search_depth="advanced",
+                include_domains= ALLOWED_SEARCH_WEBSITES,
+                include_answer=True
             )
             # Extract sources from results
             sources = [
