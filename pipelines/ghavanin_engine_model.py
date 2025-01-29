@@ -241,7 +241,7 @@ class PersianKeywordExtractor:
         
         return es_query
     
-    def generate_elasticsearch_query_with_synonyms(self,alt_questions = None, embedding_vector = None,num_candidates = 507, semantic_weight=0.6,keyword_weight= 0.3 ):
+    def generate_elasticsearch_query_with_synonyms(self,alt_questions = None, embedding_vector = None,num_candidates = 507, semantic_weight=0.5,keyword_weight= 0.3 ):
         if alt_questions:
             items = alt_questions
         else:
@@ -296,7 +296,7 @@ class PersianKeywordExtractor:
                 },
                 "_score"
             ],
-            "size" : 5,
+            "size" : 10,
             "highlight": {
                 "fields": {
                     "title": {},
@@ -370,7 +370,7 @@ class PersianKeywordExtractor:
                 },
                 "_score"
             ],
-            "size" : 5,
+            "size" : 10,
             "highlight": {
                 "fields": {
                     "title": {},
@@ -478,7 +478,7 @@ class ElasticsearchExecutor:
         # self.candidate_cache[(index_size, k, vector_dim)] = num_candidates
         return num_candidates
     
-    def execute_query(self, query: Dict[str, Any], index: str = "ghavanin", size: int = 10) -> Dict[str, Any]:
+    def execute_query(self, query: Dict[str, Any], index: str = "ghavanin", size: int = 15) -> Dict[str, Any]:
         """Execute the query and return results"""
         try:
             # Verify connection before executing query
@@ -664,9 +664,11 @@ class Pipeline:
             docs = results['documents']
             system_prompt = """
                 شما دستیار متخصص حقوق ایران هستید، لطفا تنها و تنها براساس اطللاعات داده شده به سوال کاربر پاسخ دهید
+                سعی کن تمامی مقرراتی که به سوال کاربر هست را ذکر کنی. وظیفه اصلی شما معرفی مراجعی است
+                که برای پاسخ به سوال کاربر می‌تواند مورد استفاده قرار بگیرد.
                 برای جواب نهایی لیست تمامی منابعی(مرجع ها) که استفاده کردی و به شما داده شده است را در انتها به صورت لیست 
                 markdown
-                به صورت لینک وب سایت
+                و به صورت لینک وب سایت
                 ذکر کن
             """
             for doc in docs:
