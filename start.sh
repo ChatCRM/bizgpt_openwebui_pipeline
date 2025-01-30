@@ -130,4 +130,4 @@ fi
 
 
 # Start the server
-uvicorn main:app --host "$HOST" --port "$PORT" --forwarded-allow-ips '*' --timeout-keep-alive 60 --timeout 480
+uvicorn main:app --host "$HOST" --port "$PORT" --forwarded-allow-ips '*' --timeout-keep-alive 60 ---ws-ping-timeout 300
