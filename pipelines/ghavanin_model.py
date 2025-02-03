@@ -148,8 +148,8 @@ class Pipeline:
                 return self.stream_sse_response(response)
             else:
                 return """
-                    ***شما دارای اشتراک فعال نیستید. لطفا از سایت وکیلیار اشتراک تهیه نمایید.***
-                    [وکیلیار](https://vakilyar.app)
+                    ***شما دارای اشتراک فعال نیستید. لطفا از سایت vakilgpt اشتراک تهیه نمایید.***
+                    [وکیلیار](https://vakilgpt.info)
 
                 """
 

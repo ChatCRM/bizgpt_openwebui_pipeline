@@ -222,7 +222,7 @@ class PersianKeywordExtractor:
             },
             "sort": [
                 {
-                    "metadata.approval_date": {
+                    "metadata.approval_date.gregorian": {
                         "order": "desc",
                         "missing": "_last",
                         "unmapped_type": "date"
@@ -274,6 +274,7 @@ class PersianKeywordExtractor:
         # Construct the complete Elasticsearch query
         es_query = {
             "_source": ["id_ghavanin", "title", "content", "metadata"],
+            "min_score": 0.5,
             "query": {
                 "bool": {
                     "should": should_clauses,
@@ -288,7 +289,7 @@ class PersianKeywordExtractor:
             },
             "sort": [
                 {
-                    "metadata.approval_date": {
+                    "metadata.approval_date.gregorian": {
                         "order": "desc",
                         "missing": "_last",
                         "unmapped_type": "date"
@@ -296,7 +297,7 @@ class PersianKeywordExtractor:
                 },
                 "_score"
             ],
-            "size" : 10,
+            "size" : 15,
             "highlight": {
                 "fields": {
                     "title": {},
@@ -348,6 +349,7 @@ class PersianKeywordExtractor:
         # Construct the complete Elasticsearch query
         es_query = {
             "_source": ["id_ghavanin", "title", "content", "metadata"],
+            "min_score": 0.5,
             "query": {
                 "bool": {
                     "should": should_clauses,
@@ -370,7 +372,7 @@ class PersianKeywordExtractor:
                 },
                 "_score"
             ],
-            "size" : 10,
+            "size" : 15,
             "highlight": {
                 "fields": {
                     "title": {},
@@ -664,12 +666,16 @@ class Pipeline:
             docs = results['documents']
             system_prompt = """
                 شما دستیار متخصص حقوق ایران هستید، لطفا تنها و تنها براساس اطللاعات داده شده به سوال کاربر پاسخ دهید
-                سعی کن تمامی مقرراتی که به سوال کاربر هست را ذکر کنی. وظیفه اصلی شما معرفی مراجعی است
+                دستور العمل پاسخ:
+                ۱- تمامی مقرراتی که به سوال کاربر مربوط است را ذکر کن. وظیفه اصلی شما معرفی مراجعی است
                 که برای پاسخ به سوال کاربر می‌تواند مورد استفاده قرار بگیرد.
-                برای جواب نهایی لیست تمامی منابعی(مرجع ها) که استفاده کردی و به شما داده شده است را در انتها به صورت لیست 
+                ۲- در صورتی که کاربر مجموعه ای یا لیستی از قوانین را درخواست کرد حتما تمامی منابع مربوطه را برگردان و به یک جواب اکتقا نکن
+                ۴- هر منبعی که در اختیار داری و دارای تاریخ است جواب ها را براساس تاریخ از جدید به قدیم مرتب کن
+                ۳- برای جواب نهایی لیست تمامی منابعی(مرجع ها) که استفاده کردی و به شما داده شده است را در انتها به صورت لیست 
                 markdown
                 و به صورت لینک وب سایت
                 ذکر کن
+                به یاد داشته باش که تنها و تنها باید از منابعی که در اختیارت گذاشته شده جواب دهی.
             """
             for doc in docs:
                 date = doc['source']['metadata']['approval_date']['gregorian'] if 'metadata' in doc['source'] else ""
