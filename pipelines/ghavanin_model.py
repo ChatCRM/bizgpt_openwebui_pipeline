@@ -26,6 +26,7 @@ class Pipeline:
 
     def __init__(self):
         self.chat_id = None
+        self.name = "مدل جستجوگر وب"
         self.valves = self.Valves(
             **{
                 "VAKILGPT_API_URL": os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/submit-stream-v2"),
@@ -56,7 +57,7 @@ class Pipeline:
       print(f"user: {user}")
       print(f"body: {body}")
       # Store the chat_id from body
-      self.chat_id = body.get("chat_id")
+      self.chat_id = body['metadata']['chat_id'] if ('metadata' in body and 'chat_id' in body['metadata']) else body.get('chat_id','')
       print(f"Stored chat_id: {self.chat_id}")
 
       return body

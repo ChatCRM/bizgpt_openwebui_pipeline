@@ -54,7 +54,7 @@ class Pipeline:
       print(f"user: {user}")
       print(f"body: {body}")
       # Store the chat_id from body
-      self.chat_id = body.get("chat_id")
+      self.chat_id = body['metadata']['chat_id'] if ('metadata' in body and 'chat_id' in body['metadata']) else body.get('chat_id','')
       print(f"Stored chat_id: {self.chat_id}")
 
       return body
