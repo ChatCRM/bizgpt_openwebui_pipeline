@@ -125,6 +125,8 @@ class Pipeline:
         print(body)
         print("Chat ID is: ")
         print(self.chat_id)
+        if not self.chat_id:
+            self.chat_id = body['chat_id'] if 'chat_id' in body else None
 
         print("All messages are: ")
         print(messages)

@@ -115,6 +115,8 @@ class Pipeline:
 
         print("Body is: ")
         print(body)
+        if not self.chat_id:
+            self.chat_id = body['chat_id'] if 'chat_id' in body else None
         print("Chat ID is: ")
         print(self.chat_id)
 
