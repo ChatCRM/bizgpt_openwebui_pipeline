@@ -9,6 +9,8 @@ from typing import get_type_hints, Literal, Tuple
 
 
 def stream_message_template(model: str, message: str):
+    # Preserve all special characters and newlines in the message
+    # by not modifying it at all, the raw content will be included
     return {
         "id": f"{model}-{str(uuid.uuid4())}",
         "object": "chat.completion.chunk",

@@ -714,8 +714,26 @@ async def generate_openai_chat_completion(form_data: OpenAIChatCompletionForm):
                         if line.startswith("data:"):
                             yield f"{line}\n\n"
                         else:
-                            line = stream_message_template(form_data.model, line)
-                            yield f"data: {json.dumps(line)}\n\n"
+                            # Instead of using stream_message_template, create the message directly
+                            # to avoid newline processing issues when converting to JSON
+                            message = {
+                                "id": f"{form_data.model}-{str(uuid.uuid4())}",
+                                "object": "chat.completion.chunk",
+                                "created": int(time.time()),
+                                "model": form_data.model,
+                                "choices": [
+                                    {
+                                        "index": 0,
+                                        "delta": {"content": line},
+                                        "logprobs": None,
+                                        "finish_reason": None,
+                                    }
+                                ],
+                            }
+                            # Use ensure_ascii=False to preserve unicode characters
+                            # and custom separators to prevent compacting the JSON
+                            json_data = json.dumps(message, ensure_ascii=False, separators=(',', ': '))
+                            yield f"data: {json_data}\n\n"
 
                 if isinstance(res, str) or isinstance(res, Generator):
                     finish_message = {
@@ -758,8 +776,19 @@ async def generate_openai_chat_completion(form_data: OpenAIChatCompletionForm):
                     message = res
 
                 if isinstance(res, Generator):
+                    message = ""
                     for stream in res:
-                        message = f"{message}{stream}"
+                        # Directly concatenate without any processing
+                        # to preserve all formatting including newlines
+                        if isinstance(stream, str):
+                            message = f"{message}{stream}"
+                        else:
+                            try:
+                                decoded = stream.decode("utf-8")
+                                message = f"{message}{decoded}"
+                            except (AttributeError, UnicodeDecodeError):
+                                # If it can't be decoded, just convert to string
+                                message = f"{message}{stream}"
 
                 logging.info(f"stream:false:{message}")
                 return {

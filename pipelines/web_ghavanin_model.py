@@ -26,10 +26,10 @@ class Pipeline:
 
     def __init__(self):
         self.chat_id = None
-        self.name = "مدل جستجوگر وب"
+        self.name = "مدل داده یاب"
         self.valves = self.Valves(
             **{
-                "VAKILGPT_API_URL": os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/submit-stream-v2"),
+                "VAKILGPT_API_URL": os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/ghavanin-web-search-stream"),
                 "API_SECRET_KEY": os.getenv("API_SECRET_KEY", ""),
                 "SUPABASE_URL": os.getenv("SUPABASE_URL", ""),
                 "SUPABASE_KEY": os.getenv("SUPABASE_KEY", ""),
@@ -90,23 +90,17 @@ class Pipeline:
                 # Skip empty data lines
                 if not content.strip():
                     continue
-                    
-                # Handle complete event with JSON data
-                if content.startswith('{'):
-                    continue
-                    # try:
-                    #     import json
-                    #     data = json.loads(content)
-                    #     if isinstance(data, dict) and 'response' in data:
-                    #         yield data['response']
-                    #         buffer = ""
-                    #         continue
-                    # except json.JSONDecoder:
-                    #     pass
                 
-                # Yield the actual content
-                if content not in ('**', ':**') and  not content.startswith('{'):  # Skip markdown formatting markers
-                    yield content
+                # Make sure all escaped newlines are properly converted to actual newlines
+                # This is crucial for preserving formatting
+                # Handle both JSON escaped newlines \\n and regular escaped newlines \n
+                processed_content = content
+                if '\\n' in processed_content:
+                    processed_content = processed_content.replace('\\n', '\n')
+                if '\\r' in processed_content:
+                    processed_content = processed_content.replace('\\r', '\r')
+                
+                yield processed_content
 
     def pipe(
         self, user_message: str, model_id: str, messages: List[dict], body: dict

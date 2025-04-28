@@ -29,7 +29,7 @@ class Pipeline:
         self.name = "مدل آرا و نظریات"
         self.valves = self.Valves(
             **{
-                "VAKILGPT_API_URL": os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/submit-stream-v2"),
+                "VAKILGPT_API_URL": os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/ara-es-only-stream"),
                 "API_SECRET_KEY": os.getenv("API_SECRET_KEY", ""),
                 "SUPABASE_URL": os.getenv("SUPABASE_URL", ""),
                 "SUPABASE_KEY": os.getenv("SUPABASE_KEY", ""),
