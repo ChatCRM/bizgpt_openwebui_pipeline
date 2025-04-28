@@ -18,6 +18,7 @@ from supabase import create_client, Client
 from gpt_researcher import GPTResearcher
 from tavily import TavilyClient
 import asyncio
+import re
 
 class Pipeline:
     class Valves(BaseModel):
@@ -101,9 +102,19 @@ class Pipeline:
                     # except json.JSONDecoder:
                     #     pass
                 
-                # Yield the actual content
-                if content not in ('**', ':**') and  not content.startswith('{'):  # Skip markdown formatting markers
-                    yield content
+                # Process content to handle newlines
+                if content not in ('**', ':**') and not content.startswith('{'):  # Skip markdown formatting markers
+                    # Convert any escaped newlines to actual newlines
+                    processed_content = content
+                    if '\\n' in processed_content:
+                        processed_content = processed_content.replace('\\n', '\n')
+                    if '\\r' in processed_content:
+                        processed_content = processed_content.replace('\\r', '\r')
+                    
+                    # Normalize consecutive newlines (replace more than 2 consecutive newlines with just 2)
+                    processed_content = re.sub(r'\n{3,}', '\n\n', processed_content)
+                    
+                    yield processed_content
 
     
     
