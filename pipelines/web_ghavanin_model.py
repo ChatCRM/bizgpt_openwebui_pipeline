@@ -87,20 +87,7 @@ class Pipeline:
             if decoded_line.startswith('data: '):
                 content = decoded_line[6:]  # Remove 'data: ' prefix
                 
-                # Skip empty data lines
-                if not content.strip():
-                    continue
-                
-                # Make sure all escaped newlines are properly converted to actual newlines
-                # This is crucial for preserving formatting
-                # Handle both JSON escaped newlines \\n and regular escaped newlines \n
-                processed_content = content
-                if '\\n' in processed_content:
-                    processed_content = processed_content.replace('\\n', '\n')
-                if '\\r' in processed_content:
-                    processed_content = processed_content.replace('\\r', '\r')
-                
-                yield processed_content
+                yield content
 
     def pipe(
         self, user_message: str, model_id: str, messages: List[dict], body: dict
