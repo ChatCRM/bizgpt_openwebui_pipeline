@@ -9,7 +9,6 @@ requirements: haystack-ai, datasets>=2.6.1, sentence-transformers>=2.2.0
 """
 import os
 import requests
-import re
 
 from typing import List, Union, Generator, Iterator, Optional
 from schemas import OpenAIChatMessage
@@ -27,10 +26,10 @@ class Pipeline:
 
     def __init__(self):
         self.chat_id = None
-        self.name = "مدل قوانین"
+        self.name = "مدل داده یاب"
         self.valves = self.Valves(
             **{
-                "VAKILGPT_API_URL": os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/ghavanin-es-only-stream"),
+                "VAKILGPT_API_URL": os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/ghavanin-web-search-stream"),
                 "API_SECRET_KEY": os.getenv("API_SECRET_KEY", ""),
                 "SUPABASE_URL": os.getenv("SUPABASE_URL", ""),
                 "SUPABASE_KEY": os.getenv("SUPABASE_KEY", ""),
@@ -91,33 +90,17 @@ class Pipeline:
                 # Skip empty data lines
                 if not content.strip():
                     continue
-                    
-                # Handle complete event with JSON data
-                if content.startswith('{'):
-                    continue
-                    # try:
-                    #     import json
-                    #     data = json.loads(content)
-                    #     if isinstance(data, dict) and 'response' in data:
-                    #         yield data['response']
-                    #         buffer = ""
-                    #         continue
-                    # except json.JSONDecoder:
-                    #     pass
                 
-                # Process content to handle newlines
-                if content not in ('**', ':**') and not content.startswith('{'):  # Skip markdown formatting markers
-                    # Convert any escaped newlines to actual newlines
-                    processed_content = content
-                    if '\\n' in processed_content:
-                        processed_content = processed_content.replace('\\n', '\n')
-                    if '\\r' in processed_content:
-                        processed_content = processed_content.replace('\\r', '\r')
-                    
-                    # Normalize consecutive newlines (replace more than 2 consecutive newlines with just 2)
-                    processed_content = re.sub(r'\n{3,}', '\n\n', processed_content)
-                    
-                    yield processed_content
+                # Make sure all escaped newlines are properly converted to actual newlines
+                # This is crucial for preserving formatting
+                # Handle both JSON escaped newlines \\n and regular escaped newlines \n
+                processed_content = content
+                if '\\n' in processed_content:
+                    processed_content = processed_content.replace('\\n', '\n')
+                if '\\r' in processed_content:
+                    processed_content = processed_content.replace('\\r', '\r')
+                
+                yield processed_content
 
     def pipe(
         self, user_message: str, model_id: str, messages: List[dict], body: dict
@@ -127,12 +110,10 @@ class Pipeline:
 
         print("Body is: ")
         print(body)
-        
-        if not self.chat_id:
-            self.chat_id = body['chat_id'] if 'chat_id' in body else None
-        
         print("Chat ID is: ")
         print(self.chat_id)
+        if not self.chat_id:
+            self.chat_id = body['chat_id'] if 'chat_id' in body else None
 
         print("All messages are: ")
         print(messages)

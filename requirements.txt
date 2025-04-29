@@ -31,6 +31,7 @@ redis
 sqlmodel
 chromadb
 psycopg2-binary
+elasticsearch==8.16.0
 
 # Observability
 langfuse
@@ -67,3 +68,9 @@ beautifulsoup4
 # Llama Index for RAG
 llama-index
 llama-index-llms-ollama
+
+# GPT Reasearcher
+gpt-researcher
+tavily-python
+
+asyncio

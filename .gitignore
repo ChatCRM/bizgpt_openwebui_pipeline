@@ -12,5 +12,6 @@ pipelines/*
 .venv
 venv/
 __pycache__
+.vscode
 .idea/
 .idea

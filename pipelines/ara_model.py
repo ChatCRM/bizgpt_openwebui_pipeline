@@ -27,10 +27,10 @@ class Pipeline:
 
     def __init__(self):
         self.chat_id = None
-        self.name = "مدل قوانین"
+        self.name = "مدل آرا و نظریات"
         self.valves = self.Valves(
             **{
-                "VAKILGPT_API_URL": os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/ghavanin-es-only-stream"),
+                "VAKILGPT_API_URL": os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/ara-es-only-stream"),
                 "API_SECRET_KEY": os.getenv("API_SECRET_KEY", ""),
                 "SUPABASE_URL": os.getenv("SUPABASE_URL", ""),
                 "SUPABASE_KEY": os.getenv("SUPABASE_KEY", ""),
@@ -127,7 +127,7 @@ class Pipeline:
 
         print("Body is: ")
         print(body)
-        
+
         if not self.chat_id:
             self.chat_id = body['chat_id'] if 'chat_id' in body else None
         
@@ -173,72 +173,3 @@ class Pipeline:
             print(f"An error occurred: {e}")
             return "خطایی در سیستم رخ داده است ."
 
-
-
-# CREATE OR REPLACE FUNCTION get_subscription_status(email_param TEXT)
-# RETURNS TABLE (
-#     status subscription_status,
-#     allowed_usage bigint,
-#     email TEXT,
-#     user_limit FLOAT
-# ) AS $$
-# BEGIN
-#     RETURN QUERY
-#     SELECT 
-#         s.status, 
-#         p.allowed_usage, 
-#         u.email, 
-#         COUNT(cr.id)::FLOAT / p.allowed_usage AS user_limit
-#     FROM 
-#         users u
-#     JOIN 
-#         subscriptions s ON u.id = s.user_id
-#     JOIN 
-#         products p ON p.id = s.product_id
-#     JOIN 
-#         user_credits_log cr ON cr.user_id = u.id
-#     WHERE 
-#         u.email = email_param
-#         AND s.status = 'active'
-#         AND cr.updated_at >= s.current_period_start
-#         AND cr.updated_at < s.current_period_end
-#     GROUP BY 
-#         s.status, p.allowed_usage, u.email;
-# END;
-# $$ LANGUAGE plpgsql;
-
-
-
-
-# CREATE OR REPLACE FUNCTION update_user_credits_log(
-# email_param TEXT,
-# cost_param float,
-# chat_id_param TEXT,
-# question_text_param TEXT,
-# response_text_param TEXT
-# )
-# RETURNS VOID AS $$
-# DECLARE
-#     user_id_param UUID;
-# BEGIN
-#     -- Map email to user_id
-#     SELECT id INTO user_id_param
-#     FROM users
-#     WHERE email = email_param;
-
-#     -- Check if user_id is found
-#     IF user_id_param IS NULL THEN
-#         RAISE EXCEPTION 'User with email % not found.', email_param;
-#     END IF;
-
-#     -- Insert the record into user_credit_logs
-#     INSERT INTO user_credits_log (cost, user_id, chat_id, question_text, response_text)
-#     VALUES (
-#         cost_param,
-#         user_id_param,
-#         chat_id_param,
-#         question_text_param,
-#         response_text_param
-#     );
-# END;
-# $$ LANGUAGE plpgsql;
