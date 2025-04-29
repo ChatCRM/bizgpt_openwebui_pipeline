@@ -27,7 +27,7 @@ class Pipeline:
 
     def __init__(self):
         self.chat_id = None
-        self.name = "مدل آرا و نظریات"
+        self.name = "مدل آرا قضایی"
         self.valves = self.Valves(
             **{
                 "VAKILGPT_API_URL": os.getenv("VAKILGPT_API_URL", "http://127.0.0.1:8000/question-answer/ara-es-only-stream"),
