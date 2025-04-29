@@ -75,6 +75,9 @@ class Pipeline:
           str: The actual text content as it streams in
       """
       buffer = ""
+      markdown_start_indicators = {"**", "__", "*", "_", "```", "#", "##", "###", "####", ">", "- ", "1. ", "[", "]("}
+      markdown_end_indicators = {"**", "__", "*", "_", "```", "]", ")"}
+      max_buffer_size = 50  # Maximum characters to buffer before forcing a yield
       
       for line in response.iter_lines():
         if line:
@@ -88,7 +91,70 @@ class Pipeline:
             if decoded_line.startswith('data: '):
                 content = decoded_line[6:]  # Remove 'data: ' prefix
                 
-                yield content
+                # Skip JSON-like messages (often control messages)
+                if content.startswith('{') or content.endswith('}'):
+                    continue
+                
+                # Special case: if we have accumulated content in buffer and this doesn't seem to be 
+                # part of a markdown formatting sequence, yield the buffer first
+                if buffer:
+                    # Check if we should keep buffering
+                    keep_buffering = False
+                    
+                    # More efficient check using sets
+                    # If buffer ends with any markdown start indicator
+                    for indicator in markdown_start_indicators:
+                        if buffer.endswith(indicator):
+                            keep_buffering = True
+                            break
+                    
+                    # If content starts with any markdown end part
+                    if not keep_buffering:
+                        for indicator in markdown_end_indicators:
+                            if content.startswith(indicator):
+                                keep_buffering = True
+                                break
+                    
+                    # If buffer is getting too large, yield it regardless
+                    if len(buffer) > max_buffer_size:
+                        keep_buffering = False
+                    
+                    if not keep_buffering:
+                        yield buffer
+                        buffer = ""
+                
+                # Handle special markdown cases
+                is_markdown_part = False
+                
+                # More efficient check with sets
+                # Check if this content is part of markdown syntax that should be buffered
+                if any(content == ind or content.startswith(ind) or content.endswith(ind) for ind in markdown_start_indicators):
+                    is_markdown_part = True
+                
+                # If this might be part of markdown formatting, add to buffer
+                if is_markdown_part:
+                    buffer += content
+                    
+                    # If buffer is getting too large, yield it
+                    if len(buffer) > max_buffer_size:
+                        yield buffer
+                        buffer = ""
+                else:
+                    # If there's no buffer, simply yield the content
+                    if not buffer:
+                        yield content
+                    else:
+                        # If we have a buffer, add this content to it
+                        buffer += content
+                        
+                        # If buffer is now complete or getting large, yield it
+                        if len(buffer) > max_buffer_size:
+                            yield buffer
+                            buffer = ""
+      
+      # Don't forget to yield any remaining buffer at the end
+      if buffer:
+          yield buffer
 
     def pipe(
         self, user_message: str, model_id: str, messages: List[dict], body: dict
