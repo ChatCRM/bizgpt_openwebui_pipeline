@@ -696,7 +696,7 @@ async def generate_openai_chat_completion(form_data: OpenAIChatCompletionForm):
                 if isinstance(res, str):
                     message = stream_message_template(form_data.model, res)
                     logging.info(f"stream_content:str:{message}")
-                    yield f"data: {json.dumps(message)}\n\n"
+                    yield f"data: {json.dumps(message, ensure_ascii=False)}\n\n"
 
                 if isinstance(res, Iterator):
                     for line in res:
@@ -751,7 +751,8 @@ async def generate_openai_chat_completion(form_data: OpenAIChatCompletionForm):
                         ],
                     }
 
-                    yield f"data: {json.dumps(finish_message)}\n\n"
+                    # Ensure proper Unicode handling with ensure_ascii=False
+                    yield f"data: {json.dumps(finish_message, ensure_ascii=False)}\n\n"
                     yield f"data: [DONE]"
 
             return StreamingResponse(stream_content(), media_type="text/event-stream")
